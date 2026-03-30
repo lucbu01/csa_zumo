@@ -87,6 +87,18 @@ internal class Program
                     Zumo.Instance.Cm4Led.Toggle();
                     break;
 
+                case ConsoleKey.F10:
+                    Zumo.Instance.ColorSensor.CalibrateBlack();
+                    break;
+
+                case ConsoleKey.F12:
+                    Zumo.Instance.ColorSensor.CalibrateWhite();
+                    break;
+
+                case ConsoleKey.C:
+                    Console.WriteLine($"Color: {Zumo.Instance.ColorSensor.Read()}°");
+                    break;
+
                 case ConsoleKey.D:
                     Zumo.Instance.Drive.DriveConstant(100, 100);
                     break;
@@ -97,6 +109,12 @@ internal class Program
 
                 case ConsoleKey.S:
                     Zumo.Instance.Drive.DriveConstant(0, 0);
+                    break;
+
+                case ConsoleKey.P:
+                    int val;
+                    if (int.TryParse(Console.ReadLine(), out val) && val >= 0 && val <= 8)
+                        Zumo.Instance.Sound.Play((SoundItem)val);
                     break;
 
                 case ConsoleKey.Escape:

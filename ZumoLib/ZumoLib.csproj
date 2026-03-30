@@ -14,7 +14,6 @@
 
     <ItemGroup>
         <Folder Include="Cm4Led/"/>
-        <Folder Include="ColorSensor/"/>
         <Folder Include="Lidar/"/>
         <Folder Include="Ping/"/>
     </ItemGroup>

@@ -65,7 +65,7 @@ public abstract class ComDevice
                 case '*':
                     if (e.Message.Substring(0, 4) == AwrFlt)
                     {
-                        messageReceived = e.Message;
+                        messageReceived = e.Message.Substring(4);
                         areMessageReceived.Set();
                         handled = true;
                     }
