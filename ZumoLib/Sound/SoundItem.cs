@@ -17,8 +17,9 @@ public enum SoundItem
     SuperMario,
     Wasted,
     HarryPotter,
-    LOTR,
+    LotR,
     IndianaJones,
     Bond007,
     Pacman
 }
+

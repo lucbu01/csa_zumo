@@ -15,7 +15,28 @@ internal class Program
     private static void Main(string[] args)
     {
         Console.WriteLine("Zumo starting...");
+        Console.WriteLine("Choose Program to use: ");
+        Console.WriteLine("1 - Testing");
+        Console.WriteLine("2 - Testat 1");
+        
+        var key = Console.ReadKey();
 
+        switch (key.Key)
+        {
+            case ConsoleKey.D1:
+                TestingProgram();
+                break;
+            case ConsoleKey.D2:
+                Testat1.Start();
+                break;
+            default:
+                Console.WriteLine("Invalid Key");
+                break;
+        }
+    }
+
+    private static void TestingProgram()
+    {
         Zumo.Instance.Cm4Button.ButtonChanged += ButtonChanged;
         Zumo.Instance.Cm4Led.LedStateChanged += LedChanged;
 
@@ -112,8 +133,7 @@ internal class Program
                     break;
 
                 case ConsoleKey.P:
-                    int val;
-                    if (int.TryParse(Console.ReadLine(), out val) && val >= 0 && val <= 8)
+                    if (int.TryParse(Console.ReadLine(), out var val) && val >= 0 && val <= 8)
                         Zumo.Instance.Sound.Play((SoundItem)val);
                     break;
 
@@ -124,12 +144,12 @@ internal class Program
         }
     }
 
-    public static void ButtonChanged(object? sender, ButtonStateChangedEventArgs args)
+    private static void ButtonChanged(object? sender, ButtonStateChangedEventArgs args)
     {
         Console.WriteLine("Button State: " + args.Pressed);
     }
 
-    public static void LedChanged(object? sender, LedStateChangedEventArgs args)
+    private static void LedChanged(object? sender, LedStateChangedEventArgs args)
     {
         Console.WriteLine("Led State: " + args.Enabled);
     }

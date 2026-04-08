@@ -154,7 +154,7 @@ public class Lidar
             if (data[0] != HEADER_BYTE || data[1] != HEADER_BYTE_TWO || CalculateCrc(data) != 0) break;
 
             ProcessPacket(data);
-            Console.WriteLine($"Lidar-Abstand vorne: {Points[0].Distance} mm / Intensity: {Points[0].Intensity}");
+            //Console.WriteLine($"Lidar-Abstand vorne: {Points[0].Distance} mm / Intensity: {Points[0].Intensity}");
         }
     }
 

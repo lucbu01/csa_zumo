@@ -1,9 +1,14 @@
-﻿namespace ZumoLib;
+﻿using System.Globalization;
+
+namespace ZumoLib;
 
 public class Drive : ComDevice
 {
+    public event EventHandler DriveFinished;
+    
     public Drive(ICom com) : base(com, 0x24)
     {
+        
     }
 
 
@@ -40,5 +45,30 @@ public class Drive : ComDevice
         if (str.Length > 4) str = str.Substring(str.Length - 4);
 
         return str;
+    }
+    
+    public int DriveGetRemainingDistance()
+    {
+        var msg = GetRequest("2");
+        var dist = int.Parse(msg[4..], NumberStyles.HexNumber);
+        return dist;
+    }
+
+    
+    public bool DriveIsRunning()
+    {
+        var msg = GetRequest("7");
+        var running = byte.Parse(msg[4..], NumberStyles.HexNumber) == 1;
+        return running;
+    }
+
+    protected override bool ProcessEvent(string message)
+    {
+        if (message == "5!24FF")
+        {
+            DriveFinished?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+        return false;
     }
 }
