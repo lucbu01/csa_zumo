@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="$(SolutionDir)SecureUpload.exe $(TargetDir) pi-home:netcore/$(ProjectName)" />
+        <Exec Command="$(SolutionDir)SecureUpload.exe $(TargetDir) pi-hslu:netcore/$(ProjectName)"/>
     </Target>
 
 </Project>

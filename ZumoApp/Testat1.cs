@@ -143,7 +143,7 @@ public class Testat1
 
         while (!Cts.Token.IsCancellationRequested)
         {
-            if (Zumo.Instance.Lidar[0].Distance <= 200)
+            if (Zumo.Instance.Lidar[0].Distance <= 100)
             {
                 stopReason = StopReason.Wall;
                 break;

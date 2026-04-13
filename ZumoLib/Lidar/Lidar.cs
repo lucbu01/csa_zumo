@@ -83,7 +83,7 @@ public class Lidar
             pwm.DutyCycle = 0.5;
             pwm.Start();
             Thread.Sleep(100);
-            pwm.DutyCycle = 0.15;
+            pwm.DutyCycle = 0.85;
             Thread.Sleep(100);
             pwm.Stop();
         }
