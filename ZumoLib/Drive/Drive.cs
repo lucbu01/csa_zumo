@@ -4,12 +4,11 @@ namespace ZumoLib;
 
 public class Drive : ComDevice
 {
-    public event EventHandler DriveFinished;
-    
     public Drive(ICom com) : base(com, 0x24)
     {
-        
     }
+
+    public event EventHandler DriveFinished;
 
 
     public void DriveTrack(int distance, int velocity, int acceleration)
@@ -25,6 +24,11 @@ public class Drive : ComDevice
     public void DriveTurn(int angle, int radius, int velocity, int acceleration)
     {
         SetRequest($"9{ToStr(angle)}{ToStr(radius)}{ToStr(velocity)}{ToStr(acceleration)}");
+    }
+
+    public void DriveTurnCalib(int factor)
+    {
+        SetRequest($"B{factor:X4}");
     }
 
     public void DriveConstant(int leftVelocity, int rightVelocity)
@@ -46,7 +50,7 @@ public class Drive : ComDevice
 
         return str;
     }
-    
+
     public int DriveGetRemainingDistance()
     {
         var msg = GetRequest("2");
@@ -54,7 +58,7 @@ public class Drive : ComDevice
         return dist;
     }
 
-    
+
     public bool DriveIsRunning()
     {
         var msg = GetRequest("7");
@@ -69,6 +73,7 @@ public class Drive : ComDevice
             DriveFinished?.Invoke(this, EventArgs.Empty);
             return true;
         }
+
         return false;
     }
 }

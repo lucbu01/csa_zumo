@@ -15,23 +15,30 @@ internal class Program
     private static void Main(string[] args)
     {
         Console.WriteLine("Zumo starting...");
-        Console.WriteLine("Choose Program to use: ");
-        Console.WriteLine("1 - Testing");
-        Console.WriteLine("2 - Testat 1");
-        
-        var key = Console.ReadKey();
-
-        switch (key.Key)
+        while (true)
         {
-            case ConsoleKey.D1:
-                TestingProgram();
-                break;
-            case ConsoleKey.D2:
-                Testat1.Start();
-                break;
-            default:
-                Console.WriteLine("Invalid Key");
-                break;
+            Console.WriteLine("Choose Program to use: ");
+            Console.WriteLine("1 - Testing/Configuration");
+            Console.WriteLine("2 - Testat 1");
+            Console.WriteLine();
+            Console.WriteLine("(Please calibrate color and drive turn using program 1 before starting program 2)");
+
+            var key = Console.ReadKey();
+
+            switch (key.Key)
+            {
+                case ConsoleKey.D1:
+                    TestingProgram();
+                    break;
+                case ConsoleKey.D2:
+                    Testat1.Start();
+                    break;
+                default:
+                    Console.WriteLine("Stopping Program");
+                    Zumo.Instance.Drive.Stop();
+                    Zumo.Instance.Lidar.SetPower(false);
+                    return;
+            }
         }
     }
 
@@ -44,14 +51,23 @@ internal class Program
         while (true)
         {
             Console.WriteLine();
-            Console.WriteLine("F1   Track +1000 mm");
-            Console.WriteLine("F2   Track -1000 mm");
-            Console.WriteLine("F3   Turn +90°");
-            Console.WriteLine("F4   Turn -90°");
-            Console.WriteLine("F5   Lidar On");
-            Console.WriteLine("F6   Lidar Off");
-            Console.WriteLine("F8   Ping Zumo");
-            Console.WriteLine("F9   Toggle Led");
+            Console.WriteLine("F1     Track +1000 mm");
+            Console.WriteLine("F2     Track -1000 mm");
+            Console.WriteLine("F3     Turn +90°");
+            Console.WriteLine("F4     Turn -90°");
+            Console.WriteLine("F5     Lidar On");
+            Console.WriteLine("F6     Lidar Off");
+            Console.WriteLine("F8     Ping Zumo");
+            Console.WriteLine("F9     Toggle Led");
+            Console.WriteLine("F10    Calibrate Black");
+            Console.WriteLine("F12    Calibrate White and write calibration");
+            Console.WriteLine("C      Read Color with Color Sensor");
+            Console.WriteLine("D      Drive Forward");
+            Console.WriteLine("B      Drive Backword");
+            Console.WriteLine("S      Stop Driving");
+            Console.WriteLine("P(0-9) Play Sound");
+            Console.WriteLine("T(...) Calibrate Drive Turn");
+            Console.WriteLine("Esc    Exit");
             var redir = Console.IsInputRedirected;
             var key = Console.ReadKey();
 
@@ -129,12 +145,17 @@ internal class Program
                     break;
 
                 case ConsoleKey.S:
-                    Zumo.Instance.Drive.DriveConstant(0, 0);
+                    Zumo.Instance.Drive.Stop();
                     break;
 
                 case ConsoleKey.P:
-                    if (int.TryParse(Console.ReadLine(), out var val) && val >= 0 && val <= 8)
-                        Zumo.Instance.Sound.Play((SoundItem)val);
+                    if (int.TryParse(Console.ReadLine(), out var si) && si >= 0 && si <= 8)
+                        Zumo.Instance.Sound.Play((SoundItem)si);
+                    break;
+
+                case ConsoleKey.T:
+                    if (int.TryParse(Console.ReadLine(), out var cal) && cal >= 0 && cal <= 200)
+                        Zumo.Instance.Drive.DriveTurnCalib(cal);
                     break;
 
                 case ConsoleKey.Escape:
