@@ -195,7 +195,7 @@ public class Testat1
         }
     }
 
-    private void TurnAndWait(int angle, int velocity, int acceleration)
+    private void TurnAndWait(int angle, int velocity, int acceleration, bool wallLeft)
     {
         if (!Cts.Token.IsCancellationRequested)
         {
@@ -211,6 +211,27 @@ public class Testat1
             {
                 Zumo.Instance.Drive.DriveTurn(angle, velocity, acceleration);
                 driveFinished.Wait(Cts.Token);
+                var distance = 0;
+                if (wallLeft)
+                {
+                    if (Zumo.Instance.Lidar[265].Distance < 20 && Zumo.Instance.Lidar[275].Distance < 20)
+                    {
+                        Console.WriteLine(
+                            $"Wall left detected, distance: {Zumo.Instance.Lidar[275].Distance - Zumo.Instance.Lidar[265].Distance}");
+                        distance = Zumo.Instance.Lidar[275].Distance - Zumo.Instance.Lidar[265].Distance;
+                    }
+                }
+                else if (Zumo.Instance.Lidar[85].Distance < 20 && Zumo.Instance.Lidar[95].Distance < 20)
+                {
+                    Console.WriteLine(
+                        $"Wall right detected, distance: {Zumo.Instance.Lidar[85].Distance - Zumo.Instance.Lidar[95].Distance}");
+                    distance = Zumo.Instance.Lidar[85].Distance - Zumo.Instance.Lidar[95].Distance;
+                }
+
+                if (distance > 1)
+                    TurnAndWait(1, wallLeft);
+                else if (distance < -1)
+                    TurnAndWait(-1, wallLeft);
             }
             finally
             {
@@ -219,19 +240,19 @@ public class Testat1
         }
     }
 
-    private void TurnAndWait(int angle)
+    private void TurnAndWait(int angle, bool wallLeft)
     {
-        TurnAndWait(angle, 100, 100);
+        TurnAndWait(angle, 100, 100, wallLeft);
     }
 
     private void TurnLeftAndWait()
     {
-        TurnAndWait(-90, 100, 100);
+        TurnAndWait(-90, 100, 100, false);
     }
 
     private void TurnRightAndWait()
     {
-        TurnAndWait(90, 100, 100);
+        TurnAndWait(90, 100, 100, true);
     }
 }
 
