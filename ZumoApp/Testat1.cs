@@ -57,16 +57,16 @@ public class Testat1
 
         Console.WriteLine("Red ground reached");
         PlayGroundReachedEffect();
-        TurnLeftAndWait();
+        TurnLeftAndWait(false);
 
         DriveUntilGreenGround();
 
         Console.WriteLine("Green ground reached");
         PlayGroundReachedEffect();
-        TurnRightAndWait();
+        TurnRightAndWait(false);
 
         Console.WriteLine("Driving out of labyrinth");
-        if (!Cts.Token.IsCancellationRequested) Zumo.Instance.Drive.DriveTrack(400, 100, 100);
+        DriveAndWait(200, 50, 25);
     }
 
     private static void TearDown()
@@ -90,7 +90,7 @@ public class Testat1
             if (stopReason == StopReason.Wall)
             {
                 Console.WriteLine("Wall detected, Turning Right");
-                TurnRightAndWait();
+                TurnRightAndWait(true);
             }
         }
     }
@@ -105,15 +105,16 @@ public class Testat1
             if (stopReason == StopReason.Wall)
             {
                 Console.WriteLine("Wall detected, Turning Left");
-                TurnLeftAndWait();
+                TurnLeftAndWait(true);
             }
         }
     }
 
     private void DriveOutOfStart()
     {
-        DriveAndWait(200, 100, 100);
-        TurnRightAndWait();
+        Zumo.Instance.Drive.DriveTurnCalib(138);
+        DriveAndWait(200, 50, 25);
+        TurnRightAndWait(true);
     }
 
     private void SetUp()
@@ -129,7 +130,7 @@ public class Testat1
         return groundColor switch
         {
             <= 20 or >= 340 and <= 360 => Color.Red,
-            >= 80 and <= 140 => Color.Green,
+            >= 60 and <= 140 => Color.Green,
             _ => Color.Irrelevant
         };
     }
@@ -152,12 +153,14 @@ public class Testat1
             var groundColor = CheckGroundColor();
             if (groundColor == Color.Red)
             {
+                DriveAndWait(50, 50, 25);
                 stopReason = StopReason.RedGround;
                 break;
             }
 
             if (groundColor == Color.Green)
             {
+                DriveAndWait(50, 50, 25);
                 stopReason = StopReason.GreenGround;
                 break;
             }
@@ -195,7 +198,7 @@ public class Testat1
         }
     }
 
-    private void TurnAndWait(int angle, int velocity, int acceleration, bool wallLeft)
+    private void TurnAndWait(int angle, int velocity, int acceleration, bool wallLeft, bool calibrate)
     {
         if (!Cts.Token.IsCancellationRequested)
         {
@@ -211,27 +214,25 @@ public class Testat1
             {
                 Zumo.Instance.Drive.DriveTurn(angle, velocity, acceleration);
                 driveFinished.Wait(Cts.Token);
-                var distance = 0;
-                if (wallLeft)
+                if (calibrate)
                 {
-                    if (Zumo.Instance.Lidar[265].Distance < 20 && Zumo.Instance.Lidar[275].Distance < 20)
+                    var distance = 0;
+                    if (wallLeft)
                     {
-                        Console.WriteLine(
-                            $"Wall left detected, distance: {Zumo.Instance.Lidar[275].Distance - Zumo.Instance.Lidar[265].Distance}");
-                        distance = Zumo.Instance.Lidar[275].Distance - Zumo.Instance.Lidar[265].Distance;
+                        distance = Zumo.Instance.Lidar[260].Distance - Zumo.Instance.Lidar[280].Distance;
+                        Console.WriteLine($"Wall left detected, distance: {distance}");
                     }
-                }
-                else if (Zumo.Instance.Lidar[85].Distance < 20 && Zumo.Instance.Lidar[95].Distance < 20)
-                {
-                    Console.WriteLine(
-                        $"Wall right detected, distance: {Zumo.Instance.Lidar[85].Distance - Zumo.Instance.Lidar[95].Distance}");
-                    distance = Zumo.Instance.Lidar[85].Distance - Zumo.Instance.Lidar[95].Distance;
-                }
+                    else
+                    {
+                        distance = Zumo.Instance.Lidar[80].Distance - Zumo.Instance.Lidar[100].Distance;
+                        Console.WriteLine($"Wall right detected, distance: {distance}");
+                    }
 
-                if (distance > 1)
-                    TurnAndWait(1, wallLeft);
-                else if (distance < -1)
-                    TurnAndWait(-1, wallLeft);
+                    if (distance > 1)
+                        TurnAndWait(1, 50, 50, wallLeft, true);
+                    else if (distance < -1)
+                        TurnAndWait(-1, 50, 50, wallLeft, true);
+                }
             }
             finally
             {
@@ -240,19 +241,19 @@ public class Testat1
         }
     }
 
-    private void TurnAndWait(int angle, bool wallLeft)
+    private void TurnAndWait(int angle, bool wallLeft, bool calibrate)
     {
-        TurnAndWait(angle, 100, 100, wallLeft);
+        TurnAndWait(angle, 50, 25, wallLeft, calibrate);
     }
 
-    private void TurnLeftAndWait()
+    private void TurnLeftAndWait(bool calibrate)
     {
-        TurnAndWait(-90, 100, 100, false);
+        TurnAndWait(-90, 50, 25, false, calibrate);
     }
 
-    private void TurnRightAndWait()
+    private void TurnRightAndWait(bool calibrate)
     {
-        TurnAndWait(90, 100, 100, true);
+        TurnAndWait(90, 50, 25, true, calibrate);
     }
 }
 
