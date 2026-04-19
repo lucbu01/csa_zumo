@@ -220,10 +220,12 @@ public class Testat1
                 switch (calibration)
                 {
                     case Calibration.WallLeft:
+                        Thread.Sleep(200); // Wait for lidar to update
                         distance = Zumo.Instance.Lidar[260].Distance - Zumo.Instance.Lidar[280].Distance;
                         Console.WriteLine($"Wall left detected, distance: {distance}");
                         break;
                     case Calibration.WallRight:
+                        Thread.Sleep(200); // Wait for lidar to update
                         distance = Zumo.Instance.Lidar[80].Distance - Zumo.Instance.Lidar[100].Distance;
                         Console.WriteLine($"Wall right detected, distance: {distance}");
                         break;
