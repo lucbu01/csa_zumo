@@ -4,7 +4,7 @@ namespace ZumoApp;
 
 public class Testat1
 {
-    public CancellationTokenSource Cts { get; } = new();
+    private CancellationTokenSource Cts { get; } = new();
 
     public static void Start()
     {
@@ -19,7 +19,7 @@ public class Testat1
             {
                 if (Console.ReadKey(true).Key == ConsoleKey.S)
                 {
-                    Console.WriteLine("\nAbbruch angefordert. Bitte warten...");
+                    Console.WriteLine("\nStopping requested. Please wait...");
                     testat1.Cts.Cancel();
                 }
             }
@@ -35,11 +35,11 @@ public class Testat1
         catch (AggregateException ex) when (ex.InnerExceptions.Any(e =>
                                                 e is TaskCanceledException || e is OperationCanceledException))
         {
-            Console.WriteLine("Der Task wurde erfolgreich abgebrochen.");
+            Console.WriteLine("Testat1 was cancelled.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Ein Fehler ist aufgetreten: {ex.Message}");
+            Console.WriteLine($"An error occured: {ex.Message}");
         }
         finally
         {
@@ -77,6 +77,7 @@ public class Testat1
 
     private void PlayGroundReachedEffect()
     {
+        if (Cts.Token.IsCancellationRequested) return;
         Zumo.Instance.Sound.Play(SoundItem.Wasted);
     }
 
@@ -119,7 +120,6 @@ public class Testat1
 
     private void SetUp()
     {
-        // TODO LED's blinken lassen z.B.
         Zumo.Instance.Lidar.SetPower(true);
     }
 
@@ -175,86 +175,97 @@ public class Testat1
 
     private void DriveAndWait(int distance, int velocity, int acceleration)
     {
-        if (!Cts.Token.IsCancellationRequested)
+        if (Cts.Token.IsCancellationRequested) return;
+
+        var driveFinished = new ManualResetEventSlim(false);
+
+        void OnDriveFinished(object? sender, EventArgs e)
         {
-            var driveFinished = new ManualResetEventSlim(false);
+            driveFinished.Set();
+        }
 
-            void OnDriveFinished(object? sender, EventArgs e)
-            {
-                driveFinished.Set();
-            }
-
-            Zumo.Instance.Drive.DriveFinished += OnDriveFinished;
-            try
-            {
-                Zumo.Instance.Drive.DriveTrack(distance, velocity, acceleration);
-                driveFinished.Wait(Cts.Token);
-                Zumo.Instance.Drive.DriveFinished -= OnDriveFinished;
-            }
-            finally
-            {
-                Zumo.Instance.Drive.DriveFinished -= OnDriveFinished;
-            }
+        Zumo.Instance.Drive.DriveFinished += OnDriveFinished;
+        try
+        {
+            Zumo.Instance.Drive.DriveTrack(distance, velocity, acceleration);
+            driveFinished.Wait(Cts.Token);
+        }
+        finally
+        {
+            Zumo.Instance.Drive.DriveFinished -= OnDriveFinished;
         }
     }
 
-    private void TurnAndWait(int angle, int velocity, int acceleration, bool wallLeft, bool calibrate)
+    private void TurnAndWait(int angle, int velocity, int acceleration, Calibration calibration)
     {
-        if (!Cts.Token.IsCancellationRequested)
+        if (Cts.Token.IsCancellationRequested) return;
+
+        var driveFinished = new ManualResetEventSlim(false);
+
+        void OnDriveFinished(object? sender, EventArgs e)
         {
-            var driveFinished = new ManualResetEventSlim(false);
+            driveFinished.Set();
+        }
 
-            void OnDriveFinished(object? sender, EventArgs e)
+        Zumo.Instance.Drive.DriveFinished += OnDriveFinished;
+        try
+        {
+            while (true)
             {
-                driveFinished.Set();
-            }
-
-            Zumo.Instance.Drive.DriveFinished += OnDriveFinished;
-            try
-            {
+                driveFinished.Reset();
                 Zumo.Instance.Drive.DriveTurn(angle, velocity, acceleration);
                 driveFinished.Wait(Cts.Token);
-                if (calibrate)
+
+                var distance = 0;
+                switch (calibration)
                 {
-                    var distance = 0;
-                    if (wallLeft)
-                    {
+                    case Calibration.WallLeft:
                         distance = Zumo.Instance.Lidar[260].Distance - Zumo.Instance.Lidar[280].Distance;
                         Console.WriteLine($"Wall left detected, distance: {distance}");
-                    }
-                    else
-                    {
+                        break;
+                    case Calibration.WallRight:
                         distance = Zumo.Instance.Lidar[80].Distance - Zumo.Instance.Lidar[100].Distance;
                         Console.WriteLine($"Wall right detected, distance: {distance}");
-                    }
-
-                    if (distance > 1)
-                        TurnAndWait(1, 50, 50, wallLeft, true);
-                    else if (distance < -1)
-                        TurnAndWait(-1, 50, 50, wallLeft, true);
+                        break;
+                    case Calibration.None:
+                    default:
+                        return;
                 }
+
+                if (distance is <= 1 and >= -1) return;
+
+                angle = distance > 0 ? 1 : -1;
+                velocity = 100;
+                acceleration = 100;
             }
-            finally
-            {
-                Zumo.Instance.Drive.DriveFinished -= OnDriveFinished;
-            }
+        }
+        finally
+        {
+            Zumo.Instance.Drive.DriveFinished -= OnDriveFinished;
         }
     }
 
-    private void TurnAndWait(int angle, bool wallLeft, bool calibrate)
+    private void TurnAndWait(int angle, Calibration calibration)
     {
-        TurnAndWait(angle, 50, 25, wallLeft, calibrate);
+        TurnAndWait(angle, 50, 25, calibration);
     }
 
     private void TurnLeftAndWait(bool calibrate)
     {
-        TurnAndWait(-90, 50, 25, false, calibrate);
+        TurnAndWait(-90, calibrate ? Calibration.WallRight : Calibration.None);
     }
 
     private void TurnRightAndWait(bool calibrate)
     {
-        TurnAndWait(90, 50, 25, true, calibrate);
+        TurnAndWait(90, calibrate ? Calibration.WallLeft : Calibration.None);
     }
+}
+
+internal enum Calibration
+{
+    WallLeft,
+    WallRight,
+    None
 }
 
 internal enum StopReason
